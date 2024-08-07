@@ -1,0 +1,267 @@
+
+#include <LiquidCrystal.h>
+#include <SoftwareSerial.h>
+
+
+// initialize the library with the numbers of the interface pins
+
+// Define the RX and TX pins for the GPS module
+const int RXPin = 2; // GPS TX pin to Arduino's digital pin 2
+const int TXPin = 3; // GPS RX pin to Arduino's digital pin 3
+
+const int trigPin = A1;  // ultrasonic
+const int echoPin = A2;
+
+// Set the baud rate of GPS module
+const int GPSBaud = 9600;
+
+//#define A0 IR
+
+// Create a SoftwareSerial object to communicate with the GPS module
+SoftwareSerial gpsSerial(RXPin, TXPin);
+
+// Create a TinyGPS++ object
+TinyGPSPlus gps;
+char latitude,longitude;
+
+LiquidCrystal lcd(13,12,8,9,10,11); /// REGISTER SELECT PIN,ENABLE PIN,D4 PIN,D5 PIN, D6 PIN, D7 PIN
+
+
+
+void setup()
+
+{
+
+  // set up the LCD's number of columns and rows:
+  Serial.begin(9600);
+  gpsSerial.begin(GPSBaud);
+  lcd.begin(16, 2);
+  
+  pinMode(4,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(6,OUTPUT);
+  pinMode(7,OUTPUT);
+  pinMode(A0, INPUT);
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+
+
+ lcd.clear();
+ lcd.setCursor(0, 0); // set the cursor to column 0, line 2
+ lcd.print("Beach sand Rover");//print name
+// lcd.setCursor(0, 1); // set the cursor to column 0, line 2
+// lcd.print("Rover");//print name
+ Serial.println("Beach sand Rover");
+ delay(3000);//delay of 0.75sec
+ lcd.clear();
+}
+
+  
+
+void loop()
+
+{
+
+char rcv,count;
+int X = digitalRead(A0);
+
+count=Serial.available();
+if(count>0)
+{
+rcv=Serial.read();
+Serial.println(rcv);
+
+      if(rcv == '1')
+      {
+       lcd.clear();
+       lcd.setCursor(0, 1); // set the cursor to column 0, line 2
+       lcd.print("Front");//print name
+       Serial.println("Front");
+       digitalWrite(4,HIGH);
+       digitalWrite(5,LOW);
+       digitalWrite(6,HIGH);
+       digitalWrite(7,LOW);
+       delay(500);
+      }
+
+      if(rcv == '2')
+      {
+      lcd.clear();
+      lcd.setCursor(0, 1); // set the cursor to column 0, line 2
+      lcd.print("Back");//print name
+      Serial.println("Back");
+      digitalWrite(4,LOW);
+      digitalWrite(5,HIGH);
+      digitalWrite(6,LOW);
+      digitalWrite(7,HIGH);
+      delay(500);  
+      }
+
+
+     if(rcv == '3')
+     {
+      lcd.clear();
+      lcd.setCursor(0, 1); // set the cursor to column 0, line 2
+      lcd.print("Left");//print name
+      Serial.println("Left");
+      digitalWrite(4,HIGH);
+      digitalWrite(5,LOW);
+      digitalWrite(6,LOW);
+      digitalWrite(7,LOW);
+      delay(500);  
+      }
+
+
+     if(rcv == '4')
+      {
+      lcd.clear();
+      lcd.setCursor(0, 1); // set the cursor to column 0, line 2
+      lcd.print("Right");//print name
+      Serial.println("Right");
+      digitalWrite(4,LOW);
+      digitalWrite(5,LOW);
+      digitalWrite(6,HIGH);
+      digitalWrite(7,LOW);
+      delay(500);
+      }
+
+
+      if(rcv == '5')
+      {
+      lcd.clear();
+      lcd.setCursor(0, 1); // set the cursor to column 0, line 2
+      lcd.print("Stop");//print name
+      Serial.println("Stop");
+      digitalWrite(4,LOW);
+      digitalWrite(5,LOW);
+      digitalWrite(6,LOW);
+      digitalWrite(7,LOW);
+      delay(500);
+      }
+
+      if(rcv == '6')
+      {
+
+        while(1)
+        {
+          gpslocation();
+        }
+
+  
+  
+      }
+
+      if(rcv == '8')
+      {
+      while(1)
+      {
+       
+      digitalWrite(trigPin, LOW);   // Trigger the ultrasonic sensor
+      delayMicroseconds(2);
+      digitalWrite(trigPin, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(trigPin, LOW);
+      long duration = pulseIn(echoPin, HIGH);  // Measure the time taken for the sound wave to return
+      float distance_cm = duration * 0.034 / 2;  // // Calculate the distance in centimeters
+
+      lcd.clear();
+      lcd.setCursor(0, 0); // set the cursor to column 0, line 2
+      lcd.print("Distance: ");//print name
+       lcd.setCursor(0, 1); // set the cursor to column 0, line 2
+      lcd.print(distance_cm);//print name
+      lcd.setCursor(5, 1); // set the cursor to column 0, line 2
+      lcd.print("cm");//print name
+      Serial.print("Distance: ");
+      Serial.print(distance_cm);
+      Serial.println(" cm");
+      delay(500);
+  
+      }
+      }
+
+
+
+
+        if(rcv == '7')
+      {
+         while(1)
+     {
+      
+      
+      lcd.clear();
+      lcd.setCursor(0, 0); // set the cursor to column 0, line 2
+      lcd.print("Auto Mode");//print name
+      Serial.println("Auto Mode");
+     
+        if(digitalRead(A0)== 1)
+         { 
+        lcd.clear();
+        lcd.setCursor(0, 0); // set the cursor to column 0, line 2
+        lcd.print("Object Detected");//print name
+        Serial.println("Object Detected");
+        digitalWrite(4,LOW);
+        digitalWrite(5,LOW);
+        digitalWrite(6,LOW);
+        digitalWrite(7,LOW);
+        delay(2000);
+        digitalWrite(4,LOW);
+        digitalWrite(5,HIGH);
+        digitalWrite(6,LOW);
+        digitalWrite(7,HIGH);
+        delay(2000);
+        digitalWrite(4,HIGH);
+        digitalWrite(5,LOW);
+        digitalWrite(6,LOW);
+         digitalWrite(7,LOW);
+        delay(2000);
+        lcd.clear();
+    
+      }
+       else
+       {
+        digitalWrite(4,HIGH);
+        digitalWrite(5,LOW);
+        digitalWrite(6,HIGH);
+        digitalWrite(7,LOW);
+        
+       }
+     }
+      }
+
+
+
+}
+}
+
+
+
+void gpslocation()
+{
+        while (gpsSerial.available() > 0) 
+        {
+               if (gps.encode(gpsSerial.read())) 
+               {
+                    if (gps.location.isUpdated()) 
+                    {
+                     Serial.print("Latitude: ");
+                     Serial.println(gps.location.lat(), 6); // Display latitude
+                     delay(2000);
+                     Serial.print("Longitude: ");
+                     Serial.println(gps.location.lng(), 6); // Display longitude
+                     lcd.clear();
+                     lcd.setCursor(0, 0); // set the cursor to column 0, row 0
+                     lcd.print("lat= ");
+                     lcd.setCursor(6, 0); // set the cursor to column 0, row 0
+                     lcd.print(gps.location.lat(), 6);
+                     lcd.setCursor(0, 1); // set the cursor to column 0, row 0
+                     lcd.print("long = ");
+                     lcd.setCursor(7, 1); // set the cursor to column 0, row 0
+                     lcd.print(gps.location.lng(), 6);
+                     delay(2000);
+                    }
+               }
+     
+      }   
+}
+  
